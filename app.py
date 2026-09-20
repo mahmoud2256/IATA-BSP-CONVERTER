@@ -62,6 +62,27 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# ---- access-code gate (active only when ACCESS_CODES exists in Streamlit secrets) ----
+try:
+    CODES = [str(c) for c in st.secrets["ACCESS_CODES"]]
+except Exception:
+    CODES = None  # no secrets configured (e.g. local run) -> open access
+
+if CODES is not None and st.session_state.get("code") not in CODES:
+    _, mid, _ = st.columns([1, 1, 1])
+    with mid:
+        st.markdown('<div class="step" style="color:#3B82F6">ACCESS</div>'
+                    '<div class="ttl">Enter access code</div>', unsafe_allow_html=True)
+        pw = st.text_input("code", type="password", placeholder="Access code",
+                           label_visibility="collapsed")
+        if pw:
+            if pw in CODES:
+                st.session_state["code"] = pw
+                st.rerun()
+            else:
+                st.error("Wrong access code")
+    st.stop()
+
 DEFAULT_INFO = (
     "No file selected.\n\nSupported file:\n• EG_FCAGBILLDET_*.PDF\n• Any BSP Billing PDF\n\n"
     "Output:\n• Excel with 1 sheet\n• IATA (all transactions)\n\n© 2026 Mahmoud Amin"
